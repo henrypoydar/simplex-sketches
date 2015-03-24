@@ -1,5 +1,5 @@
-# Deluanay Sketches
+# Simplex Sketches
 
-Prototyping for a polygen inspired painting.
+Prototyping for a simplex noise inspired painting.
 
 

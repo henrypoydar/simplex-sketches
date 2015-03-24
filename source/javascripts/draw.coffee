@@ -1,95 +1,51 @@
 
 $(document).ready ->
 
-
-
-  # TODO
-  # - hover pallette
-  # - hover grid
-
-  # img = document.createElement("img")
-  # img.src = "http://paperjs.org/tutorials/images/working-with-rasters/mona.jpg";
-  # img.id = "mona"
-  # # raster = new paper.Raster('mona')
-  # document.body.appendChild(img);
-  # canvas = document.getElementById('paper-canvas');
-  # paper.setup(canvas)
-  # raster = new paper.Raster('mona')
-  # raster.scale(0.5)
-  # raster.rotate(45)
-  # # http://paperjs.org/tutorials/images/color-averaging-image-areas/
-
   width = 1300
   height = 800
   edge_size = 200
   num_points = 300
   points = []
+  noise_points = []
+  center_points = []
   svg = d3.select('#svg-area')
-
-
-  filter = svg.append("defs")
-    .append("filter")
-      .attr("id", "blur")
-    .append("feGaussianBlur")
-      .attr("stdDeviation", 2)
-
-  # Colors
-  colors = []
-
-
-
-  # ...
-
 
   console.time("generate");
 
+  # Colors
+  colors = []
+  hex_colors = []
   _.map liquitex_colors, (c) ->
     colors.push pusher.color(c.hex)
-
   colors = _.sortBy colors, (c) ->
     c.hue()
+  _.map liquitex_colors, (c) ->
+    hex_colors.push c.hex
 
+  color_matcher = nearestColor.from(hex_colors)
 
+  # Generate underlying simlpex noise map
+  noise.seed Math.random()
+  _(width + (edge_size*2)).times (x) ->
+    noise_points[x] = []
+    _(height + (edge_size*2)).times (y) ->
+      val = noise.simplex2(x/500, y/500)
+      noise_points[x].push val
 
-  _.map colors, (c) ->
-    console.log c.hue()
-
-  # $.ajax
-  #   url: 'data/colors.json'
-  #   async: false
-  #   dataType: 'json'
-  #   success: (res) ->
-  #     _.map res, (o) ->
-  #       console.log o.munsell_hue
-  #       if o.munsell_hue == 'PB'
-  #         _.map o.children, (c) ->
-  #           # if c.company == 'Liquitex' and _.contains(liquitex_hgp_alpha, c.name)
-  #           if c.company == 'Liquitex'
-  #             console.log c.name
-  #             colors.push c.hex
-  #             return
-  #     return
-
-
-  # Designer Set of 6 - Includes six 2 oz tubes consisting of Cadmium Yellow Medium Hue, Ivory Black, Phthalo Blue (Green Shade), Phthalo Green (Blue Shade), Quinacridone Crimson and Titanium White.
-
-  #Classic Set of 8 - Includes eight 2 oz jars consisting of Dioxazine Purple, Ivory Black, Naphthol Crimson, Emerald Green, Cadmium Yellow Medium Hue, Titanium White, Phthalo Blue (Green Shade) and Cadmium Orange Hue.
-
-  # Generate points
+  # Generate random points
   _(num_points).times ->
     points.push [Math.floor(Math.random()*(width+(edge_size*2)))-edge_size, Math.floor(Math.random()*(height+(edge_size*2)))-edge_size]
 
   # Generate linear points
-  _(18).times (y) ->
-    _(28).times (x) ->
+  _(9).times (y) ->
+    _(14).times (x) ->
       points.push [x*100, y*100]
 
-
-
+  # Generate the polygons
   polygons = Delaunay.triangulate(points)
 
 
-
+  # Draw the polygons
   i = polygons.length
   c = 0
   while i
@@ -103,34 +59,31 @@ $(document).ready ->
     pt3x = points[polygons[i]][0]
     pt3y = points[polygons[i]][1]
     pts = "#{pt1x},#{pt1y} #{pt2x},#{pt2y} #{pt3x},#{pt3y}"
-    # clr = _.shuffle(liquitex_colors)[0].hex
-    unless c < colors.length
-      c = 0
-    clr = colors[c].hex6()
-    c++
+    ctpx = Math.floor((pt1x + pt2x + pt3x) / 3)
+    ctpy = Math.floor((pt1y + pt2y + pt3y) / 3)
+    center_points.push {x: ctpx, y: ctpy}
+    clr = "hsl(0,0%,#{Math.abs(noise_points[ctpx+edge_size][ctpy+edge_size])*100}%)"
+
     svg.append("polygon").
-      # attr("fill", "hsl(190,100%,#{(Math.random()*10)+30}%)").
       attr("fill", clr).
       attr("stroke", clr).
       attr("stroke-width", 1).
       attr("points", pts)
-      # attr("filter", "url(#blur)")
 
-  # svg.append("text").
-  #   attr('x', width/3*2).attr('y', height/3*2).
-  #   attr('fill', '#FADEDE').
-  #   style("font-family", "Helvetica Neue").
-  #   style("font-size", height*2).
-  #   style("font-weight", 100).
-  #   style("text-anchor", "middle").
-  #   text("@")
+  # Utility: plot polygon center points
+  # _.map center_points, (p) ->
+  #   svg.append("circle").
+  #     attr("cx", p.x).
+  #     attr("cy", p.y).
+  #     attr("r", 2).
+  #     attr("fill", "#fff")
 
-  console.timeEnd("generate");
-
-  # Plot points
+  # Utility: plot polygon points
   # _.map points, (p) ->
   #   svg.append("circle").
   #     attr("cx", p[0]).
   #     attr("cy", p[1]).
   #     attr("r", 3).
   #     attr("fill")
+
+  console.timeEnd("generate");
