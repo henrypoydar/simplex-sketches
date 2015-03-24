@@ -5,9 +5,13 @@ $(document).ready ->
   height = 800
   edge_size = 200
   num_points = 300
+  noise_spread = 1000
+  linear_spread = 100
+
   points = []
   noise_points = []
   center_points = []
+
   svg = d3.select('#svg-area')
 
   console.time("generate");
@@ -29,7 +33,7 @@ $(document).ready ->
   _(width + (edge_size*2)).times (x) ->
     noise_points[x] = []
     _(height + (edge_size*2)).times (y) ->
-      val = noise.simplex2(x/500, y/500)
+      val = noise.simplex2(x/noise_spread, y/noise_spread)
       noise_points[x].push val
 
   # Generate random points
@@ -37,9 +41,9 @@ $(document).ready ->
     points.push [Math.floor(Math.random()*(width+(edge_size*2)))-edge_size, Math.floor(Math.random()*(height+(edge_size*2)))-edge_size]
 
   # Generate linear points
-  _(9).times (y) ->
-    _(14).times (x) ->
-      points.push [x*100, y*100]
+  _(height/linear_spread + 1).times (y) ->
+    _(width/linear_spread + 1).times (x) ->
+      points.push [x*linear_spread, y*linear_spread]
 
   # Generate the polygons
   polygons = Delaunay.triangulate(points)
@@ -62,8 +66,9 @@ $(document).ready ->
     ctpx = Math.floor((pt1x + pt2x + pt3x) / 3)
     ctpy = Math.floor((pt1y + pt2y + pt3y) / 3)
     center_points.push {x: ctpx, y: ctpy}
-    clr = "hsl(0,0%,#{Math.abs(noise_points[ctpx+edge_size][ctpy+edge_size])*100}%)"
-
+    clr = "hsl(160,33%,#{Math.floor(Math.abs(noise_points[ctpx+edge_size][ctpy+edge_size])*30)+50}%)"
+    # cval = Math.floor(Math.abs(noise_points[ctpx+edge_size][ctpy+edge_size])*256)
+    # clr = color_matcher({r: cval, g: cval, b: cval})
     svg.append("polygon").
       attr("fill", clr).
       attr("stroke", clr).
@@ -87,3 +92,11 @@ $(document).ready ->
   #     attr("fill")
 
   console.timeEnd("generate");
+
+  # For exporting
+  # svgd = document.getElementById('svg-area')
+  # xml = new XMLSerializer().serializeToString(svgd)
+  # data = "data:image/svg+xml;base64," + btoa(xml)
+  # img  = new Image()
+  # img.setAttribute('src', data)
+  # document.body.appendChild(img)
