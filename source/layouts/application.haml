@@ -1,0 +1,12 @@
+!!! 5
+%head
+  %meta{ charset: "utf-8" }
+  %meta{ name: "viewport", content: "initial-scale=1.0" }
+  %title= "Deluaney Sketches"
+  = stylesheet_link_tag "application"
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+
+%body
+  %section#main
+    = yield
+  = javascript_include_tag "application"
