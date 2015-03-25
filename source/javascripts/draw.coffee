@@ -5,8 +5,9 @@ $(document).ready ->
   height = 800
   edge_size = 200
   num_points = 300
-  noise_spread = 1000
-  linear_spread = 100
+  noise_spread = 600
+  width_spread = 100
+  height_spread = 100
 
   points = []
   noise_points = []
@@ -41,9 +42,9 @@ $(document).ready ->
     points.push [Math.floor(Math.random()*(width+(edge_size*2)))-edge_size, Math.floor(Math.random()*(height+(edge_size*2)))-edge_size]
 
   # Generate linear points
-  _(height/linear_spread + 1).times (y) ->
-    _(width/linear_spread + 1).times (x) ->
-      points.push [x*linear_spread, y*linear_spread]
+  _(height/height_spread + 1).times (y) ->
+    _(width/width_spread + 1).times (x) ->
+      points.push [x*width_spread, y*height_spread]
 
   # Generate the polygons
   polygons = Delaunay.triangulate(points)
@@ -52,6 +53,7 @@ $(document).ready ->
   # Draw the polygons
   i = polygons.length
   c = 0
+  hue = Math.random()*360
   while i
     --i
     pt1x = points[polygons[i]][0]
@@ -66,9 +68,11 @@ $(document).ready ->
     ctpx = Math.floor((pt1x + pt2x + pt3x) / 3)
     ctpy = Math.floor((pt1y + pt2y + pt3y) / 3)
     center_points.push {x: ctpx, y: ctpy}
-    clr = "hsl(160,33%,#{Math.floor(Math.abs(noise_points[ctpx+edge_size][ctpy+edge_size])*30)+50}%)"
+
+    clr = "hsl(#{hue},33%,#{Math.floor(Math.abs(noise_points[ctpx+edge_size][ctpy+edge_size])*30)+50}%)"
     # cval = Math.floor(Math.abs(noise_points[ctpx+edge_size][ctpy+edge_size])*256)
     # clr = color_matcher({r: cval, g: cval, b: cval})
+    # clr = _.shuffle(liquitex_colors)[0].hex
     svg.append("polygon").
       attr("fill", clr).
       attr("stroke", clr).
